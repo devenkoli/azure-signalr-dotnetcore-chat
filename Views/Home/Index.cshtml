@@ -1,0 +1,467 @@
+﻿@{
+    ViewData["Title"] = "Chat Page";
+}
+@using SampleChatSignalRCore.Web.Models.ViewModels;
+@model ChatViewModel;
+<style type="text/css">
+    #lblName {
+        font-size: 16px;
+        color: darkslateblue;
+    }
+
+    #errMessage {
+        font-size: 14px;
+        color: darkred;
+    }
+
+    .chat-body {
+        background-color: #CCCCCC;
+    }
+
+        .chat-body ul {
+            list-style: none;
+            max-height: calc(100vh - 368px);
+            min-height: calc(100vh - 368px);
+            overflow-y: auto;
+        }
+
+        .chat-body ul {
+            padding-left: 10px;
+            padding-right: 10px;
+            margin-bottom: 0px;
+        }
+
+            .chat-body ul li {
+                float: left;
+                width: 100%;
+            }
+
+    .double-input .form-control {
+        width: 100%;
+        border-right-width: 0px;
+    }
+
+        .double-input .form-control:focus {
+            border-right-width: 1px;
+        }
+
+    .main-container .left {
+        height: 100%;
+        color: #337ab7;
+    }
+
+    /* CSS to defines your number of messages */
+    .message-bubble {
+        display: inline-block;
+        background: red;
+        text-align: center;
+        color: #f0f0f0;
+        font-size: 12px;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        float: right;
+    }
+
+    .main-container .left {
+        list-style: none;
+        max-height: calc(100vh - 320px);
+        min-height: calc(100vh - 320px);
+        overflow-y: auto;
+    }
+
+
+        .main-container .left .header {
+            padding: 10px 5px;
+            background-color: #222;
+        }
+
+            .main-container .left .header h4 {
+                color: white;
+            }
+
+            .main-container .left .header #create-room {
+                position: absolute;
+                right: 15px;
+                top: 8px;
+            }
+
+                .main-container .left .header #create-room i {
+                    font-size: 10px;
+                    border: 2px solid #135bdb;
+                    padding: 5px;
+                    width: 25px;
+                    height: 25px;
+                    border-radius: 32px;
+                    text-indent: 1px;
+                    line-height: 10px;
+                }
+
+    #roomsList {
+        padding-left: 0px;
+    }
+
+        #roomsList li .active {
+            font-weight: 500;
+        }
+
+        #roomsList .active {
+            background: #f5f5f5;
+        }
+
+        #roomsList li {
+            cursor: pointer;
+            padding: 10px 5px;
+            list-style: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+            #roomsList li .roomname {
+                white-space: nowrap;
+                overflow: hidden;
+                font-size: 14px;
+                text-overflow: ellipsis;
+                width: calc(100% - 30px);
+            }
+
+    .nosidepadding {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+</style>
+<style>
+    /*animation Styles*/
+    .shake-notification {
+        animation: shake 1s;
+    }
+
+    @@keyframes shake {
+        0% {
+            transform: rotate(25deg);
+        }
+
+        12.5% {
+            transform: rotate(-20deg);
+        }
+
+        25% {
+            transform: rotate(16deg);
+        }
+
+        37.5% {
+            transform: rotate(-12deg);
+        }
+
+        50% {
+            transform: rotate(8deg);
+        }
+
+        62.5% {
+            transform: rotate(-4deg);
+        }
+
+        75% {
+            transform: rotate(2deg);
+        }
+
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+</style>
+
+<div style="margin-top: 50px;">
+    <div class="row">&nbsp;</div>
+    <div id="grid1"></div>
+    <div class="row mb-2">
+
+        <div class="card w-100">
+            <div class="row">
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-default waves-effect waves-light" onclick="setCurrentRoom(0)">
+                        Back To Lobby
+                    </button>
+                </div>
+                <div class="col-md-6 text-right">
+                    <span id="errMessage">* set username before starting the chat..</span>
+                    <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#exampleModal">
+                        Change User
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row mb-2">
+        <div class="card w-100">
+            <div class="card-body">
+                Chatting as
+                <span id="lblName" class="text-uppercase"></span>
+            </div>
+
+        </div>
+
+    </div>
+    <div class="row main-container">
+        <div class="col-sm-3 left nosidepadding">
+            <div class="header">
+                <h4>
+                    Chat Rooms
+                    <a href="#" id="create-room" data-toggle="modal" data-target="#createRoom"><i class="fa fa-plus"></i></a>
+                </h4>
+
+            </div>
+            <div class="rooms">
+                <div>
+                    <ul id="roomsList">
+                        @await Html.PartialAsync("ChatRoomsList", Model.rooms)
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-9">
+            <div class="row">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#chatsTab">Chat</a></li>
+                    @*<li><a data-toggle="tab" href="#filesTab">Files</a></li>*@
+                </ul>
+                <div class="tab-content">
+                    <div id="chatsTab" class="tab-pane fade in active">
+                        <div class="chat-body table-bordered">
+                            <ul id="messagesList">
+                                @await Html.PartialAsync("ChatList", Model.messages)
+                            </ul>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="input-group double-input">
+
+                                        <input type="text" placeholder="" id="messageInput" class="form-control" />
+                                        <span class="input-group-btn">
+                                            <a id="sendButton" class="btn btn-primary"><i class="glyphicon glyphicon-send"></i></a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @*<div id="filesTab" class="tab-pane fade">
+                        <h3>Menu 1</h3>
+                        <p>Some content in menu 1.</p>
+                    </div>*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User  Name</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        Specify your chat username
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="col-sm-6">
+                        <input type="text" id="userInput" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnSetuserName" class="btn btn-primary">Set</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createRoom" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"> Room Name</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        Enter a room name
+                    </div>
+                </div>
+                <div class="row">
+
+                    <div class="col-sm-6">
+                        <input type="text" id="roomInput" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnCreateRoom" class="btn btn-primary">Create</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts {
+    <script src="~/js/chat.js"></script>
+    <script>
+        var pendingNotification = [];
+        $(document).ready(function () {
+            $('#exampleModal').modal('show');
+            $("#messageInput").attr("disabled", "disabled");
+            $("#sendButton").disabled = true;
+
+            $('#exampleModal').on('shown.bs.modal', function () {
+                $('#userInput').trigger('focus')
+            })
+
+            $('#createRoom').on('shown.bs.modal', function () {
+                $('#roomInput').trigger('focus')
+            })
+
+            //renderGrid();
+
+            $('#btnSetuserName').click(function () {
+                if ($('#userInput').val().length > 0) {
+                    $('#lblName').text($('#userInput').val());
+                    $('#exampleModal').modal('hide');
+                    $("#messageInput").removeAttr("disabled", "disabled");
+                    $("#sendButton").prop('disabled', false);
+                    $('#create-room').prop('disabled', false);
+                    $('#errMessage').hide();
+                    updateChatSection();
+                }
+                else
+                    alert('User Name Required');
+
+            });
+        });
+
+        function closeRoomDialog(){
+            $('#createRoom').modal('hide');
+        }
+
+        function updateChatSection() {
+            var userName = $('#userInput').val();
+            var roomId = parseInt($("#roomId").val()) || 0;
+            var url = '@Html.Raw(@Url.Action("GetChatSection", "Home", new { userName = "nm1", roomId = "rm1"  }))';
+            console.log(url.replace("nm1", userName).replace("rm1", roomId));
+            $.ajax({
+                url: url.replace("nm1", userName).replace("rm1", roomId ), success: function (result) {
+                    $("#messagesList").html(result);
+                    $("#messagesList").scrollTop($("#messagesList")[0].scrollHeight);
+                }
+            });
+        }
+
+
+        function setCurrentRoom(roomId) {
+            getNotificationCounts();
+            var url = '@Html.Raw(@Url.Action("SetChatRoom", "Home", new { roomId = "rm1" }))';
+            $.ajax({
+                url: url.replace("rm1", roomId), success: function (result) {
+                    $("#roomsList").html(result);
+                    setPendingNotifications(roomId);
+                    updateChatSection();
+                }
+            });
+        }
+
+        function getNotificationCounts() {
+            pendingNotification = [];
+            var msgBubbles = $(".message-bubble");
+            msgBubbles.each(function (x) {
+                if (msgBubbles[x].innerHTML !== "")
+                    pendingNotification.push(msgBubbles[x]);
+            });
+        }
+
+
+        function setPendingNotifications(roomId) {
+
+            pendingNotification.forEach(function (x) {
+                var itemRoomId = x.classList[1].split('_').slice(-1)[0];
+                if (parseInt(itemRoomId) === roomId) {
+                    setTimeout(function () {
+                        pendingNotification.pop(x);
+                    },100);
+                }
+                else {
+                    setTimeout(function () {
+                        showMessageBubble(itemRoomId,false,parseInt(x.innerText));
+                    }, 100);
+
+                }
+            });
+        }
+
+        function showMessageBubble(roomId,shake, count = 1) {
+            var roomBubbleElement = $(".room_msg_bubble_" + roomId);
+            if (shake) {
+                roomBubbleElement.removeClass('shake-notification');
+            }
+            var value = parseInt(roomBubbleElement.text());
+            if (isNaN(value)) {
+                roomBubbleElement.html(count);
+            } else {
+                roomBubbleElement.html(value + 1);
+            }
+            roomBubbleElement.show();
+            if (shake) {
+                setTimeout(function () {
+                    roomBubbleElement.addClass('shake-notification');
+                }, 100);
+            }
+        }
+
+
+        function renderGrid() {
+            var products = [];
+            $("#grid1").kendoGrid({
+                dataSource: {
+                    data: products,
+                    schema: {
+                        model: {
+                            fields: {
+                                ProductName: { type: "string" },
+                                UnitPrice: { type: "number" },
+                                UnitsInStock: { type: "number" },
+                                Discontinued: { type: "boolean" }
+                            }
+                        }
+                    },
+                    pageSize: 20
+                },
+                height: 550,
+                scrollable: true,
+                sortable: true,
+                filterable: true,
+                pageable: {
+                    input: true,
+                    numeric: false
+                },
+                columns: [
+                    "ProductName",
+                    { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "130px" },
+                    { field: "UnitsInStock", title: "Units In Stock", width: "130px" },
+                    { field: "Discontinued", width: "130px" }
+                ]
+        });
+        }
+    </script>
+}

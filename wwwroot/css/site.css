@@ -1,0 +1,27 @@
+﻿.navbar {
+    z-index: 1040;
+}
+
+.side-nav {
+    margin-top: 45px !important;
+}
+
+.double-nav .breadcrumb-dn p {
+    color: #fff;
+}
+
+@media (min-width : 1440px) {
+    main {
+        margin-left: 240px;
+    }
+
+        main .mdb-container {
+            padding: 2px 25px !important;
+            overflow-x: hidden;
+        }
+}
+
+main .mdb-container {
+    padding: 2px 20px;
+    overflow-x: hidden;
+}
